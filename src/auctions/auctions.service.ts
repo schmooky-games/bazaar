@@ -3,12 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual, MoreThanOrEqual, Like } from 'typeorm';
 import { Auction } from './entities/auction.entity';
 import { CreateAuctionDto, AuctionFiltersDto } from './dto/auction.dto';
+import { BidsGateway } from 'src/websockets/bids.gateway';
+import { BidsService } from 'src/bids/bids.service';
+import { Bid } from 'src/bids/entities/bid.entity';
 
 @Injectable()
 export class AuctionsService {
   constructor(
     @InjectRepository(Auction)
     private auctionRepository: Repository<Auction>,
+    private bidsService: BidsService,
+    private bidsGateway: BidsGateway,
   ) {}
 
   async createAuction(dto: CreateAuctionDto, userId: string): Promise<Auction> {
@@ -55,9 +60,14 @@ export class AuctionsService {
     });
   }
 
-  async endAuction(id: string): Promise<void> {
+  async endAuction(id: string): Promise<Bid> {
     const auction = await this.getAuctionById(id);
-    auction.endDate = new Date();
-    await this.auctionRepository.save(auction);
+    const endDate = new Date();
+    await this.auctionRepository.update(auction, { endDate: endDate });
+
+    const winningBid = await this.bidsService.getHighestBidsForAuction(id);
+    await this.bidsGateway.notifyAuctionEnd(id, winningBid);
+
+    return winningBid;
   }
 }

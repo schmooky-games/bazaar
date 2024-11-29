@@ -11,6 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
 import { CustomLoggerService } from 'src/logger/logger.service';
+import { Bid } from 'src/bids/entities/bid.entity';
 
 @Injectable()
 @WebSocketGateway({
@@ -42,7 +43,7 @@ export class BidsGateway
         }),
       ),
     };
-    this.logger.log('WebSocket State', JSON.stringify(context));
+    this.logger.log(JSON.stringify(context), 'WEBSOCKET');
   }
 
   afterInit(server: any) {
@@ -152,7 +153,7 @@ export class BidsGateway
     this.logState('Price Update Notification');
   }
 
-  async notifyAuctionEnd(auctionId: string, winningBid: any) {
+  async notifyAuctionEnd(auctionId: string, winningBid: Bid) {
     this.logger.log(
       `\n🏁 Sending auction end notification for auction ${auctionId}`,
     );

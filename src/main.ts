@@ -17,7 +17,12 @@ async function bootstrap() {
     .build();
   app.enableCors();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
-  await app.listen(configService.get('PORT') ?? 3000);
+  SwaggerModule.setup('api', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
+  await app.listen(configService.get('PORT'));
 }
 bootstrap();

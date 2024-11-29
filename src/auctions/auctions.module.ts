@@ -1,12 +1,18 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuctionsController } from './auctions.controller';
 import { AuctionsService } from './auctions.service';
 import { Auction } from './entities/auction.entity';
 import { User } from '../users/entities/user.entity';
+import { WebsocketsModule } from 'src/websockets/websockets.module';
+import { BidsModule } from 'src/bids/bids.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Auction, User])],
+  imports: [
+    TypeOrmModule.forFeature([Auction, User]),
+    WebsocketsModule,
+    forwardRef(() => BidsModule),
+  ],
   controllers: [AuctionsController],
   providers: [AuctionsService],
   exports: [AuctionsService],
