@@ -7,6 +7,9 @@ import { BidsModule } from './bids/bids.module';
 import { JwtModule } from '@nestjs/jwt';
 import { WebsocketsModule } from './websockets/websockets.module';
 import { MailModule } from './mail/mail.module';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
+import { CustomLoggerService } from './logger/logger.service';
 
 @Module({
   imports: [
@@ -24,6 +27,12 @@ import { MailModule } from './mail/mail.module';
         logging: true,
         autoLoadEntities: true,
       }),
+    }),
+    WinstonModule.forRootAsync({
+      useFactory: () => ({
+        // options
+      }),
+      inject: [],
     }),
     JwtModule.registerAsync({
       inject: [ConfigService],

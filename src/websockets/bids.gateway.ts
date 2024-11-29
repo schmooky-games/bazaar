@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
+import { CustomLoggerService } from 'src/logger/logger.service';
 
 @Injectable()
 @WebSocketGateway({
@@ -23,42 +24,48 @@ export class BidsGateway
   @WebSocketServer()
   server: Server;
 
+  constructor(private readonly logger: CustomLoggerService) {}
+
   private auctionSubscriptions: Map<string, Set<string>> = new Map();
   private connectedClients: Set<string> = new Set();
 
   private logState(action: string) {
-    console.log('\n=== WebSocket State Log ===');
-    console.log(`Action: ${action}`);
-    console.log(`Total connected clients: ${this.connectedClients.size}`);
-    console.log('Connected client IDs:', Array.from(this.connectedClients));
-    console.log('\nAuction Subscriptions:');
-    this.auctionSubscriptions.forEach((subscribers, auctionId) => {
-      console.log(`\nAuction ${auctionId}:`);
-      console.log(`- Total subscribers: ${subscribers.size}`);
-      console.log(`- Subscriber IDs: ${Array.from(subscribers)}`);
-    });
-    console.log('==========================\n');
+    const context = {
+      action,
+      connectedClientsCount: this.connectedClients.size,
+      connectedClientIds: Array.from(this.connectedClients),
+      auctionSubscriptions: Array.from(this.auctionSubscriptions.entries()).map(
+        ([auctionId, subscribers]) => ({
+          auctionId,
+          subscribersCount: subscribers.size,
+          subscriberIds: Array.from(subscribers),
+        }),
+      ),
+    };
+    this.logger.log('WebSocket State', JSON.stringify(context));
   }
 
   afterInit(server: any) {
-    console.log('Sockets init');
+    this.logger.log('Sockets init');
   }
 
   handleConnection(client: Socket) {
     this.connectedClients.add(client.id);
-    console.log(`\n👥 New client connected: ${client.id}`);
+    this.logger.log(`\n👥 New client connected: ${client.id}`);
     this.logState('New Connection');
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`\n❌ Client disconnected: ${client.id}`);
+    this.logger.log(`\n❌ Client disconnected: ${client.id}`);
     this.connectedClients.delete(client.id);
 
     this.auctionSubscriptions.forEach((subscribers, auctionId) => {
       if (subscribers.has(client.id)) {
         subscribers.delete(client.id);
         client.leave(`auction:${auctionId}`);
-        console.log(`Removed client ${client.id} from auction ${auctionId}`);
+        this.logger.log(
+          `Removed client ${client.id} from auction ${auctionId}`,
+        );
       }
     });
 
@@ -68,7 +75,9 @@ export class BidsGateway
     ] of this.auctionSubscriptions.entries()) {
       if (subscribers.size === 0) {
         this.auctionSubscriptions.delete(auctionId);
-        console.log(`Removed empty auction ${auctionId} from subscriptions`);
+        this.logger.log(
+          `Removed empty auction ${auctionId} from subscriptions`,
+        );
       }
     }
 
@@ -80,12 +89,12 @@ export class BidsGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() auctionId: string,
   ) {
-    console.log(
+    this.logger.log(
       `\n📝 Subscription request from client ${client.id} to auction ${auctionId}`,
     );
 
     if (!this.auctionSubscriptions.has(auctionId)) {
-      console.log(`Creating new subscription set for auction ${auctionId}`);
+      this.logger.log(`Creating new subscription set for auction ${auctionId}`);
       this.auctionSubscriptions.set(auctionId, new Set());
     }
 
@@ -102,19 +111,21 @@ export class BidsGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() auctionId: string,
   ) {
-    console.log(
+    this.logger.log(
       `\n🚫 Unsubscription request from client ${client.id} from auction ${auctionId}`,
     );
 
     if (this.auctionSubscriptions.has(auctionId)) {
       this.auctionSubscriptions.get(auctionId).delete(client.id);
-      console.log(
+      this.logger.log(
         `Removed client ${client.id} from auction ${auctionId} subscribers`,
       );
 
       if (this.auctionSubscriptions.get(auctionId).size === 0) {
         this.auctionSubscriptions.delete(auctionId);
-        console.log(`Removed empty auction ${auctionId} from subscriptions`);
+        this.logger.log(
+          `Removed empty auction ${auctionId} from subscriptions`,
+        );
       }
     }
 
@@ -126,9 +137,9 @@ export class BidsGateway
   }
 
   async notifyPriceUpdate(auctionId: string, newPrice: number) {
-    console.log(`\n💰 Sending price update for auction ${auctionId}`);
-    console.log(`New price: ${newPrice}`);
-    console.log(
+    this.logger.log(`\n💰 Sending price update for auction ${auctionId}`);
+    this.logger.log(`New price: ${newPrice}`);
+    this.logger.log(
       `Number of subscribers: ${this.auctionSubscriptions.get(auctionId)?.size || 0}`,
     );
 
@@ -142,11 +153,11 @@ export class BidsGateway
   }
 
   async notifyAuctionEnd(auctionId: string, winningBid: any) {
-    console.log(
+    this.logger.log(
       `\n🏁 Sending auction end notification for auction ${auctionId}`,
     );
-    console.log(`Winning bid: ${JSON.stringify(winningBid)}`);
-    console.log(
+    this.logger.log(`Winning bid: ${JSON.stringify(winningBid)}`);
+    this.logger.log(
       `Number of subscribers: ${this.auctionSubscriptions.get(auctionId)?.size || 0}`,
     );
 
