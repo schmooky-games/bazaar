@@ -4,8 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuctionsModule } from './auctions/auctions.module';
 import { BidsModule } from './bids/bids.module';
-import { AppDataSource } from './data-source';
 import { JwtModule } from '@nestjs/jwt';
+import { WebsocketsModule } from './websockets/websockets.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -34,6 +35,8 @@ import { JwtModule } from '@nestjs/jwt';
     UsersModule,
     AuctionsModule,
     BidsModule,
+    WebsocketsModule,
+    MailModule,
   ],
   providers: [],
 })

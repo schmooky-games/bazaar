@@ -2,9 +2,7 @@ import {
   Entity,
   Column,
   PrimaryColumn,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  BeforeInsert,
+  ManyToOne
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { createId } from '@paralleldrive/cuid2';

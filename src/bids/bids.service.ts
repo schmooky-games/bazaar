@@ -5,13 +5,18 @@ import { Bid } from './entities/bid.entity';
 import { PlaceBidDto } from './dto/bid.dto';
 import { AuctionsService } from '../auctions/auctions.service';
 import { createId } from '@paralleldrive/cuid2';
+import { Auction } from 'src/auctions/entities/auction.entity';
+import { BidsGateway } from 'src/websockets/bids.gateway';
 
 @Injectable()
 export class BidsService {
   constructor(
     @InjectRepository(Bid)
     private bidRepository: Repository<Bid>,
+    @InjectRepository(Auction)
+    private auctionRepository: Repository<Auction>,
     private auctionService: AuctionsService,
+    private bidsGateway: BidsGateway,
   ) {}
 
   async placeBid(dto: PlaceBidDto, userId: string): Promise<Bid> {
@@ -34,8 +39,20 @@ export class BidsService {
 
     await this.bidRepository.save(bid);
 
-    auction.currentPrice = dto.amount;
-    await this.auctionService.createAuction(auction, auction.seller.id);
+    await this.auctionRepository.update(dto.auctionId, {
+      currentPrice: dto.amount,
+    });
+
+    if (auction.endDate <= new Date()) {
+      await this.auctionRepository.save(auction);
+    }
+
+    await this.bidsGateway.notifyPriceUpdate(dto.auctionId, dto.amount);
+
+    if (auction.endDate <= new Date()) {
+      await this.auctionRepository.save(auction);
+      await this.bidsGateway.notifyAuctionEnd(dto.auctionId, bid);
+    }
 
     return bid;
   }

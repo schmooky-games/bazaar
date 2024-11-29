@@ -1,5 +1,5 @@
 import { createId } from '@paralleldrive/cuid2';
-import { Entity, Column, PrimaryColumn, BeforeInsert } from 'typeorm';
+import { Entity, Column, PrimaryColumn} from 'typeorm';
 
 @Entity()
 export class User {

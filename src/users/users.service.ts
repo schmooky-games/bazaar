@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -7,6 +11,7 @@ import { User } from './entities/user.entity';
 import { RegisterUserDto, LoginUserDto } from './dto/user.dto';
 import { Response } from 'express';
 import { createId } from '@paralleldrive/cuid2';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +19,7 @@ export class UsersService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
+    private mailService: MailService, // Сервис отправки писем
   ) {}
 
   async register(dto: RegisterUserDto): Promise<User> {
@@ -36,13 +42,38 @@ export class UsersService {
       createdAt: new Date(),
     });
 
+    // const savedUser = await this.userRepository.save(user);
+
+    // const token = this.jwtService.sign(
+    //   { email: user.email },
+    //   { secret: 'email-verification-secret', expiresIn: '1h' },
+    // );
+
+    // await this.mailService.sendVerificationEmail(user.email, token);
+
+    // return savedUser;
     return this.userRepository.save(user);
   }
 
-  async login(
-    dto: LoginUserDto,
-    response: Response<any, Record<string, any>>,
-  ): Promise<void> {
+  // async verifyEmail(token: string): Promise<string> {
+  //   try {
+  //     const decoded = this.jwtService.verify(token, {
+  //       secret: 'email-verification-secret',
+  //     });
+  //     const email = decoded.email;
+
+  //     const user = await this.userRepository.findOne({ where: { email } });
+  //     if (!user) {
+  //       throw new UnauthorizedException('Invalid token or user not found');
+  //     }
+
+  //     return `Email ${email} успешно подтвержден!`;
+  //   } catch (error) {
+  //     throw new BadRequestException('Неверный или истёкший токен');
+  //   }
+  // }
+
+  async login(dto: LoginUserDto): Promise<{ token: string }> {
     const user = await this.userRepository.findOne({
       where: { email: dto.email },
     });
@@ -59,12 +90,7 @@ export class UsersService {
     const payload = { sub: user.id, email: user.email };
     const token = this.jwtService.sign(payload);
 
-    response.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    return { token };
   }
 
   async findById(id: string): Promise<User> {
@@ -75,7 +101,5 @@ export class UsersService {
     return user;
   }
 
-  async logout(response: Response<any, Record<string, any>>): Promise<void> {
-    response.clearCookie('token');
-  }
+  async logout(response: Response<any, Record<string, any>>): Promise<void> {}
 }

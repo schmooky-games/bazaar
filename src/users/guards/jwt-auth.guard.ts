@@ -10,21 +10,19 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
 
-    const cookieHeader = request.headers.cookie;
-    if (!cookieHeader) {
-      throw new UnauthorizedException('No cookies provided');
+    const authHeader = request.headers['authorization'];
+    if (!authHeader) {
+      throw new UnauthorizedException('Authorization header not found');
     }
 
-    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {});
-
-    const token = cookies['token'];
+    const token = authHeader.split(' ')[1];
     if (!token) {
-      throw new UnauthorizedException('No token provided');
+      throw new UnauthorizedException(
+        'Token not found in Authorization header',
+      );
     }
+
+    request.headers['authorization'] = `Bearer ${token}`;
 
     return super.canActivate(context);
   }

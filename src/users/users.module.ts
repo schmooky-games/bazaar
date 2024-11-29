@@ -7,10 +7,12 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { JwtStrategy } from './stategies/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
     ConfigModule,
+    MailModule,
     TypeOrmModule.forFeature([User]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

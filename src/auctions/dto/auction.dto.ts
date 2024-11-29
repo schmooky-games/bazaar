@@ -3,26 +3,23 @@ import { IsString, IsNumber, IsDate, IsBoolean } from 'class-validator';
 
 export class CreateAuctionDto {
   @ApiProperty({
-    example: 'auc_example',
+    example: 'Auction 1',
   })
   @IsString()
   name: string;
 
   @ApiProperty({
-    example: 'auc desc',
+    example: 'Description',
   })
   @IsString()
   description: string;
 
   @ApiProperty({
-    example: 11,
+    example: 100,
   })
   @IsNumber()
   startingPrice: number;
 
-  @ApiProperty({
-    example: 123,
-  })
   @IsNumber()
   currentPrice: number;
 
