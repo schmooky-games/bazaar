@@ -40,6 +40,7 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post('logout')
   async logout() {
     return { message: 'Successfully logged out' };

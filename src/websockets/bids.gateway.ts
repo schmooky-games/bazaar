@@ -10,8 +10,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
-import { CustomLoggerService } from 'src/logger/logger.service';
-import { Bid } from 'src/bids/entities/bid.entity';
+import { CustomLoggerService } from '../logger/logger.service';
+import { Bid } from '../bids/entities/bid.entity';
 
 @Injectable()
 @WebSocketGateway({
@@ -47,7 +47,7 @@ export class BidsGateway
   }
 
   afterInit(server: any) {
-    this.logger.log('Sockets init');
+    this.logger.log('Sockets init', 'WEBSOCKET');
   }
 
   handleConnection(client: Socket) {

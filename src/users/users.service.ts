@@ -11,7 +11,7 @@ import { User } from './entities/user.entity';
 import { RegisterUserDto, LoginUserDto } from './dto/user.dto';
 import { Response } from 'express';
 import { createId } from '@paralleldrive/cuid2';
-import { MailService } from 'src/mail/mail.service';
+// import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -19,7 +19,7 @@ export class UsersService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
-    private mailService: MailService, // Сервис отправки писем
+    // private mailService: MailService,
   ) {}
 
   async register(dto: RegisterUserDto): Promise<User> {

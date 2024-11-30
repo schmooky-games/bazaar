@@ -1,6 +1,5 @@
 import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
-import { join } from 'path';
 import { MailService } from './mail.service';
 
 @Module({
@@ -8,7 +7,7 @@ import { MailService } from './mail.service';
     MailerModule.forRoot({
       transport: {
         host: '',
-        port: 0,
+        port: 587,
         secure: false,
         auth: {
           user: '',

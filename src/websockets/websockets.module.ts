@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BidsGateway } from './bids.gateway';
-import { CustomLoggerService } from 'src/logger/logger.service';
+import { CustomLoggerService } from '../logger/logger.service';
 
 @Module({
   providers: [BidsGateway, CustomLoggerService],

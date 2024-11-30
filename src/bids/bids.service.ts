@@ -1,12 +1,17 @@
-import { Injectable, BadRequestException, forwardRef, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  forwardRef,
+  Inject,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Bid } from './entities/bid.entity';
 import { PlaceBidDto } from './dto/bid.dto';
-import { AuctionsService } from '../auctions/auctions.service';
 import { createId } from '@paralleldrive/cuid2';
-import { Auction } from 'src/auctions/entities/auction.entity';
-import { BidsGateway } from 'src/websockets/bids.gateway';
+import { Auction } from '../auctions/entities/auction.entity';
+import { BidsGateway } from '../websockets/bids.gateway';
 
 @Injectable()
 export class BidsService {
@@ -14,13 +19,22 @@ export class BidsService {
     @InjectRepository(Bid) private readonly bidRepository: Repository<Bid>,
     @InjectRepository(Auction)
     private readonly auctionRepository: Repository<Auction>,
-    @Inject(forwardRef(() => AuctionsService))
-    private readonly auctionService: AuctionsService,
     private readonly bidsGateway: BidsGateway,
   ) {}
 
+  private async validateAuction(auctionId: string): Promise<Auction> {
+    const auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+      relations: ['seller'],
+    });
+    if (!auction) {
+      throw new NotFoundException('Auction not found');
+    }
+    return auction;
+  }
+
   async placeBid(dto: PlaceBidDto, userId: string): Promise<Bid> {
-    const auction = await this.auctionService.getAuctionById(dto.auctionId);
+    const auction = await this.validateAuction(dto.auctionId);
 
     if (auction.endDate < new Date()) {
       throw new BadRequestException('Auction has ended');

@@ -1,17 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual, MoreThanOrEqual, Like } from 'typeorm';
 import { Auction } from './entities/auction.entity';
 import { CreateAuctionDto, AuctionFiltersDto } from './dto/auction.dto';
-import { BidsGateway } from 'src/websockets/bids.gateway';
-import { BidsService } from 'src/bids/bids.service';
-import { Bid } from 'src/bids/entities/bid.entity';
+import { BidsGateway } from '../websockets/bids.gateway';
+import { BidsService } from '../bids/bids.service';
+import { Bid } from '../bids/entities/bid.entity';
 
 @Injectable()
 export class AuctionsService {
   constructor(
-    @InjectRepository(Auction)
-    private auctionRepository: Repository<Auction>,
+    @InjectRepository(Auction) private auctionRepository: Repository<Auction>,
     private bidsService: BidsService,
     private bidsGateway: BidsGateway,
   ) {}

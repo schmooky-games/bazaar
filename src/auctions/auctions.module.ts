@@ -4,8 +4,8 @@ import { AuctionsController } from './auctions.controller';
 import { AuctionsService } from './auctions.service';
 import { Auction } from './entities/auction.entity';
 import { User } from '../users/entities/user.entity';
-import { WebsocketsModule } from 'src/websockets/websockets.module';
-import { BidsModule } from 'src/bids/bids.module';
+import { WebsocketsModule } from '../websockets/websockets.module';
+import { BidsModule } from '../bids/bids.module';
 
 @Module({
   imports: [
