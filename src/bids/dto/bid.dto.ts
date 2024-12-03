@@ -13,10 +13,4 @@ export class PlaceBidDto {
   })
   @IsString()
   auctionId: string;
-
-  @ApiProperty({
-    example: 'n29xgbalaxqzoziqzrr9vo56',
-  })
-  @IsString()
-  bidderId: string;
 }

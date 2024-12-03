@@ -2,10 +2,9 @@ import {
   Controller,
   Post,
   Body,
-  Res,
+  Request,
   Get,
   UseGuards,
-  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { RegisterUserDto, LoginUserDto } from './dto/user.dto';
@@ -35,8 +34,10 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('me')
-  getProfile() {
-    return { message: 'Protected route' };
+  async getProfile(@Request() req) {
+    const user = await this.usersService.findById(req.user.sub);
+    delete user.password;
+    return user;
   }
 
   @UseGuards(JwtAuthGuard)

@@ -72,7 +72,6 @@ describe('BidsService', () => {
     const mockBidDto = {
       auctionId: 'test-auction-id',
       amount: 150,
-      bidderId: 'test-bidder-id',
     };
 
     const mockUserId = 'test-user-id';
@@ -121,7 +120,6 @@ describe('BidsService', () => {
       const lowBidDto = {
         auctionId: 'test-auction-id',
         amount: 50,
-        bidderId: 'test-bidder-id',
       };
 
       mockAuctionRepository.findOne.mockResolvedValue(mockAuction);

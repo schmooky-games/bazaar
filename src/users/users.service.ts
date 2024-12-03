@@ -94,10 +94,20 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        createdAt: true,
+      },
+    });
+
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
+
     return user;
   }
 
