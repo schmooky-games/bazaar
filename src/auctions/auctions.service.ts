@@ -6,6 +6,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual, MoreThanOrEqual, Like } from 'typeorm';
+import {
+  IPaginationOptions,
+  paginate,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
 import { Auction } from './entities/auction.entity';
 import { CreateAuctionDto, AuctionFiltersDto } from './dto/auction.dto';
 import { BidsGateway } from '../websockets/bids.gateway';
@@ -40,28 +45,37 @@ export class AuctionsService {
     return auction;
   }
 
-  async listAuctions(filters: AuctionFiltersDto): Promise<Auction[]> {
-    const where: any = {};
+  async listAuctions(
+    filters: AuctionFiltersDto,
+    options: IPaginationOptions,
+  ): Promise<Pagination<Auction>> {
+    const queryBuilder = this.auctionRepository.createQueryBuilder('auction');
 
     if (filters.minPrice) {
-      where.currentPrice = MoreThanOrEqual(filters.minPrice);
+      queryBuilder.andWhere('auction.currentPrice >= :minPrice', {
+        minPrice: filters.minPrice,
+      });
     }
     if (filters.maxPrice) {
-      where.currentPrice = LessThanOrEqual(filters.maxPrice);
+      queryBuilder.andWhere('auction.currentPrice <= :maxPrice', {
+        maxPrice: filters.maxPrice,
+      });
     }
     if (filters.searchTerm) {
-      where.name = Like(`%${filters.searchTerm}%`);
+      queryBuilder.andWhere('auction.name LIKE :searchTerm', {
+        searchTerm: `%${filters.searchTerm}%`,
+      });
     }
     if (filters.active !== undefined) {
-      where.endDate = filters.active
-        ? MoreThanOrEqual(new Date())
-        : LessThanOrEqual(new Date());
+      if (filters.active) {
+        queryBuilder.andWhere('auction.endDate >= :now', { now: new Date() });
+      } else {
+        queryBuilder.andWhere('auction.endDate < :now', { now: new Date() });
+      }
     }
 
-    return this.auctionRepository.find({
-      where,
-      relations: ['seller'],
-    });
+    queryBuilder.leftJoinAndSelect('auction.seller', 'seller');
+    return paginate<Auction>(queryBuilder, options);
   }
 
   async endAuction(id: string): Promise<Bid> {

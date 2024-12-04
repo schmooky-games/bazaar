@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsDate, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsDate,
+  IsBoolean,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateAuctionDto {
   @ApiProperty({
@@ -31,14 +37,26 @@ export class CreateAuctionDto {
 }
 
 export class AuctionFiltersDto {
+  @IsOptional()
   @IsNumber()
-  minPrice?: number;
+  minPrice: number;
 
+  @IsOptional()
   @IsNumber()
-  maxPrice?: number;
+  maxPrice: number;
 
-  searchTerm?: string;
+  @IsOptional()
+  searchTerm: string;
 
+  @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  active: boolean;
+}
+
+export class PaginationOptionsDto {
+  @IsNumber()
+  page: number = 1;
+
+  @IsNumber()
+  limit: number = 10;
 }

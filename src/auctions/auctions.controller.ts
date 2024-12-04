@@ -8,10 +8,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
-import { CreateAuctionDto, AuctionFiltersDto } from './dto/auction.dto';
+import {
+  CreateAuctionDto,
+  AuctionFiltersDto,
+  PaginationOptionsDto,
+} from './dto/auction.dto';
 import { JwtAuthGuard } from '../users/guards/jwt-auth.guard';
 import { GetUser } from '../users/decorators/get-user.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Pagination } from 'nestjs-typeorm-paginate';
+import { Auction } from './entities/auction.entity';
 
 @Controller()
 export class AuctionsController {
@@ -30,14 +36,13 @@ export class AuctionsController {
   }
 
   @Get('auctions')
-  listAuctions(@Query() filters: AuctionFiltersDto) {
-    return this.auctionsService.listAuctions(filters);
-  }
-
-  @Post('finish_auction/:id')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  endAuction(@Param('id') id: string) {
-    return this.auctionsService.endAuction(id);
+  listAuctions(
+    @Query() filters: AuctionFiltersDto,
+    @Query() paginationOptions: PaginationOptionsDto,
+  ): Promise<Pagination<Auction>> {
+    return this.auctionsService.listAuctions(filters, {
+      page: paginationOptions.page,
+      limit: paginationOptions.limit,
+    });
   }
 }
