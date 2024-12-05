@@ -11,6 +11,9 @@ export class Bid {
   @Column()
   amount: number;
 
+  @Column()
+  placedAt: Date;
+
   @ManyToOne(() => Auction, (auction) => auction.id)
   auction: Auction;
 

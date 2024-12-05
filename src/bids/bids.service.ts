@@ -1,8 +1,6 @@
 import {
   Injectable,
   BadRequestException,
-  forwardRef,
-  Inject,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,6 +10,11 @@ import { PlaceBidDto } from './dto/bid.dto';
 import { createId } from '@paralleldrive/cuid2';
 import { Auction } from '../auctions/entities/auction.entity';
 import { BidsGateway } from '../websockets/bids.gateway';
+import {
+  IPaginationOptions,
+  paginate,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class BidsService {
@@ -47,6 +50,7 @@ export class BidsService {
     const bid = this.bidRepository.create({
       id: createId(),
       amount: dto.amount,
+      placedAt: new Date(),
       auction: { id: dto.auctionId },
       bidder: { id: userId },
     });
@@ -64,6 +68,18 @@ export class BidsService {
     await this.bidsGateway.notifyPriceUpdate(dto.auctionId, dto.amount);
 
     return bid;
+  }
+
+  async getBidsForUser(
+    userId: string,
+    options: IPaginationOptions,
+  ): Promise<Pagination<Bid>> {
+    const queryBuilder = this.bidRepository
+      .createQueryBuilder('bid')
+      .where('bid.bidderId = :userId', { userId })
+      .orderBy('bid.placedAt', 'DESC'); 
+
+    return paginate<Bid>(queryBuilder, options);
   }
 
   async getBidsForAuction(auctionId: string): Promise<Bid[]> {

@@ -5,6 +5,8 @@ import {
   IsDate,
   IsBoolean,
   IsOptional,
+  IsInt,
+  Min,
 } from 'class-validator';
 
 export class CreateAuctionDto {
@@ -51,12 +53,4 @@ export class AuctionFiltersDto {
   @IsOptional()
   @IsBoolean()
   active: boolean;
-}
-
-export class PaginationOptionsDto {
-  @IsNumber()
-  page: number = 1;
-
-  @IsNumber()
-  limit: number = 10;
 }
