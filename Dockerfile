@@ -6,8 +6,10 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --build-from-source bcryptjs
-RUN npm install -g typeorm typescript ts-node @types/node
+RUN npm install --build-from-source bcryptjs && \
+    npm install -g typescript ts-node && \
+    npm install --save-dev @types/node && \
+    npm install typeorm @nestjs/typeorm @nestjs/config pg
 
 COPY . .
 
