@@ -12,9 +12,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # volumes:
-    #   - .:/app
-    #   - /app/node_modules
+    volumes:
+      - .:/app
+      - /app/node_modules
 
   db:
     build:
@@ -26,8 +26,8 @@ services:
     env_file:
       - .env
     command: -c "shared_preload_libraries=pg_idkit"
-    # volumes:
-    #   - postgres_data:/var/lib/postgresql/data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
