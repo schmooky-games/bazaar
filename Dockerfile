@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN npm install --build-from-source bcryptjs
-RUN npm install ts-node typescript @types/node typeorm
+RUN npm install -g typeorm typescript ts-node @types/node
 
 COPY . .
 
