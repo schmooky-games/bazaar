@@ -2,13 +2,12 @@ FROM node:18-alpine
 
 RUN apk add --no-cache python3 make g++
 
-RUN npm install -g typescript ts-node typeorm@0.3.17
-
 WORKDIR /app
 
 COPY package*.json ./
 COPY tsconfig.json ./
 
+# Устанавливаем зависимости локально
 RUN npm install --build-from-source bcryptjs && \
     npm install
 
@@ -18,5 +17,5 @@ RUN npm run build
 
 EXPOSE 3000
 
-# Исправленный путь к CLI
-CMD ["sh", "-c", "typeorm migration:run -d src/data-source.ts && node dist/main.js"]
+# Используем node для запуска скомпилированных миграций
+CMD ["sh", "-c", "node dist/data-source.js migration:run && node dist/main.js"]
