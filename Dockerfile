@@ -4,7 +4,7 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-RUN npm install -g ts-node
+RUN npm install -g ts-node typeorm
 
 COPY package*.json ./
 COPY tsconfig.json ./
