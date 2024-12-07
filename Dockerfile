@@ -15,5 +15,5 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node -r ts-node/register ./node_modules/typeorm/cli.js migration:run -d dist/data-source.js \
+CMD ["sh", "-c", "npm run migration:run \
     && node dist/main.js"]
