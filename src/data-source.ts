@@ -5,7 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 ConfigModule.forRoot();
 const configService = new ConfigService();
 
-export const AppDataSource = new DataSource({
+const AppDataSource = new DataSource({
   type: 'postgres',
   host: configService.get<string>('DB_HOST'),
   port: configService.get<number>('DB_PORT'),
