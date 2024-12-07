@@ -8,8 +8,9 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Устанавливаем зависимости локально
-RUN npm install --build-from-source bcryptjs && \
-    npm install
+RUN npm install --build-from-source bcryptjs
+RUN npm cache clean --force && \
+    npm install --verbose
 
 COPY . .
 
@@ -18,4 +19,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Используем node для запуска скомпилированных миграций
-CMD ["sh", "-c", "node dist/data-source.js migration:run && node dist/main.js"]
+CMD ["sh", "-c", "cd /app && NODE_PATH=/app/node_modules npm run migration:run && node dist/main.js"]
