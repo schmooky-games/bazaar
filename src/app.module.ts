@@ -14,11 +14,7 @@ import { WebsocketsModule } from './websockets/websockets.module';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USER'),
-        password: configService.get<string>('DB_PASS'),
-        database: configService.get<string>('DB_NAME'),
+        url: configService.get<string>('DB_URL'),
         synchronize: false,
         logging: true,
         autoLoadEntities: true,
@@ -27,7 +23,7 @@ import { WebsocketsModule } from './websockets/websockets.module';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('SECRET'),
+        secret: configService.get<string>('JWT_SECRET'),
         signOptions: { expiresIn: '24h' },
       }),
     }),
