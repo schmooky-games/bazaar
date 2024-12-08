@@ -6,7 +6,6 @@ import { AuctionsModule } from './auctions/auctions.module';
 import { BidsModule } from './bids/bids.module';
 import { JwtModule } from '@nestjs/jwt';
 import { WebsocketsModule } from './websockets/websockets.module';
-import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -36,7 +35,6 @@ import { MailModule } from './mail/mail.module';
     AuctionsModule,
     BidsModule,
     WebsocketsModule,
-    MailModule,
   ],
   providers: [],
 })

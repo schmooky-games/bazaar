@@ -46,6 +46,7 @@ export class BidsGateway
     this.logger.log(JSON.stringify(context), 'WEBSOCKET');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   afterInit(server: any) {
     this.logger.log('Sockets init', 'WEBSOCKET');
   }

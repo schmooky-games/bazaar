@@ -1,9 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryColumn,
-  ManyToOne
-} from 'typeorm';
+import { Entity, Column, PrimaryColumn, ManyToOne } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { createId } from '@paralleldrive/cuid2';
 

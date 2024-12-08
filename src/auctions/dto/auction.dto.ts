@@ -5,8 +5,6 @@ import {
   IsDate,
   IsBoolean,
   IsOptional,
-  IsInt,
-  Min,
 } from 'class-validator';
 
 export class CreateAuctionDto {

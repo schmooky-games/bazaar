@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -111,5 +107,6 @@ export class UsersService {
     return user;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async logout(response: Response<any, Record<string, any>>): Promise<void> {}
 }

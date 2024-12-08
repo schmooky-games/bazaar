@@ -77,7 +77,7 @@ export class BidsService {
     const queryBuilder = this.bidRepository
       .createQueryBuilder('bid')
       .where('bid.bidderId = :userId', { userId })
-      .orderBy('bid.placedAt', 'DESC'); 
+      .orderBy('bid.placedAt', 'DESC');
 
     return paginate<Bid>(queryBuilder, options);
   }
