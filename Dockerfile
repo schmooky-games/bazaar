@@ -19,4 +19,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "./node_modules/.bin/typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts && node dist/main.js"]
+CMD ["sh", "-c", "typeorm migration:run -d ./src/data-source.ts && node dist/main.js"]
