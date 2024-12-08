@@ -4,8 +4,6 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-RUN npm install -g ts-node typeorm
-
 COPY package*.json ./
 COPY tsconfig.json ./
 
@@ -19,4 +17,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "typeorm migration:run -d ./src/data-source.ts && node dist/main.js"]
+CMD ["sh", "-c", "npx typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts && node dist/main.js"]
