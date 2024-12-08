@@ -14,4 +14,5 @@ COPY . .
 
 RUN npm run build
 RUN npm run migration:run
-RUN npm run start:prod
+
+CMD [ "node", "dist/main.js" ]
