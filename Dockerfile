@@ -13,8 +13,5 @@ RUN npm install ts-node typeorm @types/node
 COPY . .
 
 RUN npm run build
-RUN npm run migration:generate
 RUN npm run migration:run
 RUN npm run start:prod
-
-CMD ["sh", "-c", "node run-migrations.js && node dist/main.js"]
