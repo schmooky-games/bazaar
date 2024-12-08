@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Добавим ts-node как отдельную зависимость в dependencies (не в devDependencies)
-RUN npm install ts-node typeorm @types/node
+RUN npm ci
 
 COPY . .
 
