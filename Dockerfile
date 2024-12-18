@@ -1,18 +1,18 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
 COPY package*.json ./
-COPY tsconfig.json ./
 
-# Добавим ts-node как отдельную зависимость в dependencies (не в devDependencies)
-RUN npm ci
+RUN npm install
 
 COPY . .
 
+RUN npx prisma generate
 RUN npm run build
-RUN npm run migration:run
 
-CMD [ "node", "dist/main.js" ]
+EXPOSE 3000
+
+CMD npm run prisma:deploy && npm run start:prod

@@ -11,11 +11,9 @@ import {
 } from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
 import { CreateAuctionDto, AuctionFiltersDto } from './dto/auction.dto';
-import { JwtAuthGuard } from '../users/guards/jwt-auth.guard';
-import { GetUser } from '../users/decorators/get-user.decorator';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { Pagination } from 'nestjs-typeorm-paginate';
-import { Auction } from './entities/auction.entity';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth-guard';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
 
 @Controller('auctions')
 export class AuctionsController {
@@ -24,8 +22,8 @@ export class AuctionsController {
   @Post('create')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  createAuction(@Body() dto: CreateAuctionDto, @GetUser('id') userId: string) {
-    return this.auctionsService.createAuction(dto, userId);
+  createAuction(@Body() dto: CreateAuctionDto, @GetUser() userData: any) {
+    return this.auctionsService.createAuction(dto, userData.sub);
   }
 
   @Get(':id')
@@ -36,14 +34,20 @@ export class AuctionsController {
   @Get()
   @ApiQuery({ name: 'page', type: Number, required: true, example: 1 })
   @ApiQuery({ name: 'limit', type: Number, required: true, example: 10 })
-  listAuctions(
+  async listAuctions(
     @Query() filters: AuctionFiltersDto,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number = 5,
-  ): Promise<Pagination<Auction>> {
-    return this.auctionsService.listAuctions(filters, {
-      page: page,
-      limit: limit,
-    });
+  ): Promise<{
+    items: any[];
+    meta: {
+      totalItems: number;
+      itemCount: number;
+      itemsPerPage: number;
+      totalPages: number;
+      currentPage: number;
+    };
+  }> {
+    return this.auctionsService.listAuctions(filters, { page, limit });
   }
 }

@@ -5,10 +5,10 @@ export class PaginationOptionsDto {
   @IsInt()
   @Type(() => Number)
   @Min(1)
-  page: number;
+  skip: number;
 
   @IsInt()
   @Type(() => Number)
   @Min(1)
-  limit: number;
+  take: number;
 }

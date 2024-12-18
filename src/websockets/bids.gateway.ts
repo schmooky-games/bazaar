@@ -11,7 +11,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
 import { CustomLoggerService } from '../logger/logger.service';
-import { Bid } from '../bids/entities/bid.entity';
+import { Bid } from '@prisma/client';
 
 @Injectable()
 @WebSocketGateway({

@@ -1,38 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import {
-  IPaginationOptions,
-  paginate,
-  Pagination,
-} from 'nestjs-typeorm-paginate';
-import { Auction } from './entities/auction.entity';
 import { CreateAuctionDto, AuctionFiltersDto } from './dto/auction.dto';
 import { BidsGateway } from '../websockets/bids.gateway';
+import { PrismaService } from '../../prisma/prisma.service';
 import { BidsService } from '../bids/bids.service';
-import { Bid } from '../bids/entities/bid.entity';
+import { Prisma, Auction, Bid } from '@prisma/client';
 
 @Injectable()
 export class AuctionsService {
   constructor(
-    @InjectRepository(Auction) private auctionRepository: Repository<Auction>,
-    private bidsService: BidsService,
-    private bidsGateway: BidsGateway,
+    private readonly prisma: PrismaService,
+    private readonly bidsService: BidsService,
+    private readonly bidsGateway: BidsGateway,
   ) {}
 
-  async createAuction(dto: CreateAuctionDto, userId: string): Promise<Auction> {
-    const auction = this.auctionRepository.create({
-      ...dto,
-      currentPrice: dto.startingPrice,
-      seller: { id: userId },
+  async createAuction(
+    dto: CreateAuctionDto,
+    sellerId: string,
+  ): Promise<Auction> {
+    return this.prisma.auction.create({
+      data: {
+        ...dto,
+        currentPrice: dto.startingPrice,
+        sellerId,
+      },
     });
-    return this.auctionRepository.save(auction);
   }
 
   async getAuctionById(id: string): Promise<Auction> {
-    const auction = await this.auctionRepository.findOne({
+    const auction = await this.prisma.auction.findUnique({
       where: { id },
-      relations: ['seller'],
     });
     if (!auction) {
       throw new NotFoundException('Auction not found');
@@ -42,43 +38,74 @@ export class AuctionsService {
 
   async listAuctions(
     filters: AuctionFiltersDto,
-    options: IPaginationOptions,
-  ): Promise<Pagination<Auction>> {
-    const queryBuilder = this.auctionRepository.createQueryBuilder('auction');
+    options: { page: number; limit: number },
+  ): Promise<{
+    items: any[];
+    meta: {
+      totalItems: number;
+      itemCount: number;
+      itemsPerPage: number;
+      totalPages: number;
+      currentPage: number;
+    };
+  }> {
+    const { page, limit } = options;
+    const skip = (page - 1) * limit;
 
+    // Фильтрация
+    const where: any = {};
     if (filters.minPrice) {
-      queryBuilder.andWhere('auction.currentPrice >= :minPrice', {
-        minPrice: filters.minPrice,
-      });
+      where.currentPrice = { gte: filters.minPrice };
     }
     if (filters.maxPrice) {
-      queryBuilder.andWhere('auction.currentPrice <= :maxPrice', {
-        maxPrice: filters.maxPrice,
-      });
+      where.currentPrice = { lte: filters.maxPrice };
     }
     if (filters.searchTerm) {
-      queryBuilder.andWhere('auction.name LIKE :searchTerm', {
-        searchTerm: `%${filters.searchTerm}%`,
-      });
+      where.name = { contains: filters.searchTerm, mode: 'insensitive' };
     }
     if (filters.active !== undefined) {
-      if (filters.active) {
-        queryBuilder.andWhere('auction.endDate >= :now', { now: new Date() });
-      } else {
-        queryBuilder.andWhere('auction.endDate < :now', { now: new Date() });
-      }
+      where.endDate = filters.active ? { gte: new Date() } : { lt: new Date() };
     }
 
-    queryBuilder.leftJoinAndSelect('auction.seller', 'seller');
-    return paginate<Auction>(queryBuilder, options);
+    const [data, totalItems] = await Promise.all([
+      this.prisma.auction.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { endDate: 'asc' },
+      }),
+      this.prisma.auction.count({ where }),
+    ]);
+
+    return {
+      items: data,
+      meta: {
+        totalItems,
+        itemCount: data.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
   }
 
-  async endAuction(id: string): Promise<Bid> {
+  async endAuction(id: string): Promise<Bid | null> {
     const auction = await this.getAuctionById(id);
-    const endDate = new Date();
-    await this.auctionRepository.update(auction, { endDate: endDate });
 
+    if (!auction) {
+      throw new NotFoundException('Auction not found');
+    }
+
+    // Update auction's end date
+    await this.prisma.auction.update({
+      where: { id },
+      data: { endDate: new Date() },
+    });
+
+    // Get the highest bid for the auction
     const winningBid = await this.bidsService.getHighestBidsForAuction(id);
+
+    // Notify via WebSocket
     await this.bidsGateway.notifyAuctionEnd(id, winningBid);
 
     return winningBid;

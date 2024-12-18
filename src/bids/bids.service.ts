@@ -3,32 +3,21 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Bid } from './entities/bid.entity';
+import { PrismaService } from '../../prisma/prisma.service';
 import { PlaceBidDto } from './dto/bid.dto';
-import { createId } from '@paralleldrive/cuid2';
-import { Auction } from '../auctions/entities/auction.entity';
 import { BidsGateway } from '../websockets/bids.gateway';
-import {
-  IPaginationOptions,
-  paginate,
-  Pagination,
-} from 'nestjs-typeorm-paginate';
+import { PaginationOptionsDto } from 'src/pagination/pagination.dto';
 
 @Injectable()
 export class BidsService {
   constructor(
-    @InjectRepository(Bid) private readonly bidRepository: Repository<Bid>,
-    @InjectRepository(Auction)
-    private readonly auctionRepository: Repository<Auction>,
+    private readonly prisma: PrismaService,
     private readonly bidsGateway: BidsGateway,
   ) {}
 
-  private async validateAuction(auctionId: string): Promise<Auction> {
-    const auction = await this.auctionRepository.findOne({
+  private async validateAuction(auctionId: string) {
+    const auction = await this.prisma.auction.findUnique({
       where: { id: auctionId },
-      relations: ['seller'],
     });
     if (!auction) {
       throw new NotFoundException('Auction not found');
@@ -36,7 +25,7 @@ export class BidsService {
     return auction;
   }
 
-  async placeBid(dto: PlaceBidDto, userId: string): Promise<Bid> {
+  async placeBid(dto: PlaceBidDto, userId: string) {
     const auction = await this.validateAuction(dto.auctionId);
 
     if (auction.endDate < new Date()) {
@@ -47,54 +36,54 @@ export class BidsService {
       throw new BadRequestException('Bid must be higher than current price');
     }
 
-    const bid = this.bidRepository.create({
-      id: createId(),
-      amount: dto.amount,
-      placedAt: new Date(),
-      auction: { id: dto.auctionId },
-      bidder: { id: userId },
+    const bid = await this.prisma.bid.create({
+      data: {
+        id: undefined,
+        amount: dto.amount,
+        placedAt: new Date(),
+        auctionId: dto.auctionId,
+        bidderId: userId,
+      },
     });
 
-    await this.bidRepository.save(bid);
-
-    await this.auctionRepository.update(dto.auctionId, {
-      currentPrice: dto.amount,
+    await this.prisma.auction.update({
+      where: { id: dto.auctionId },
+      data: { currentPrice: dto.amount },
     });
-
-    if (auction.endDate <= new Date()) {
-      await this.auctionRepository.save(auction);
-    }
 
     await this.bidsGateway.notifyPriceUpdate(dto.auctionId, dto.amount);
 
     return bid;
   }
 
-  async getBidsForUser(
-    userId: string,
-    options: IPaginationOptions,
-  ): Promise<Pagination<Bid>> {
-    const queryBuilder = this.bidRepository
-      .createQueryBuilder('bid')
-      .where('bid.bidderId = :userId', { userId })
-      .orderBy('bid.placedAt', 'DESC');
+  async getBidsForUser(userId: string, options: PaginationOptionsDto) {
+    const { skip, take } = options;
 
-    return paginate<Bid>(queryBuilder, options);
+    const bids = await this.prisma.bid.findMany({
+      where: { bidderId: userId },
+      orderBy: { placedAt: 'desc' },
+      skip,
+      take,
+    });
+
+    const total = await this.prisma.bid.count({
+      where: { bidderId: userId },
+    });
+
+    return { items: bids, total, skip, take };
   }
 
-  async getBidsForAuction(auctionId: string): Promise<Bid[]> {
-    return this.bidRepository.find({
-      where: { auction: { id: auctionId } },
-      relations: ['bidder'],
-      order: { amount: 'DESC' },
+  async getBidsForAuction(auctionId: string) {
+    return this.prisma.bid.findMany({
+      where: { auctionId },
+      orderBy: { amount: 'desc' },
     });
   }
 
-  async getHighestBidsForAuction(auctionId: string): Promise<Bid> {
-    return this.bidRepository.findOne({
-      where: { auction: { id: auctionId } },
-      relations: ['bidder'],
-      order: { amount: 'DESC' },
+  async getHighestBidsForAuction(auctionId: string) {
+    return this.prisma.bid.findFirst({
+      where: { auctionId },
+      orderBy: { amount: 'desc' },
     });
   }
 }

@@ -1,20 +1,21 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { BidsController } from './bids.controller';
 import { BidsService } from './bids.service';
-import { Bid } from './entities/bid.entity';
 import { AuctionsModule } from '../auctions/auctions.module';
 import { WebsocketsModule } from '../websockets/websockets.module';
-import { Auction } from '../auctions/entities/auction.entity';
+import { RedisModule } from 'src/redis/redis.module';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaModule } from 'prisma/prisma.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Bid, Auction]),
+    PrismaModule,
+    RedisModule,
     WebsocketsModule,
     forwardRef(() => AuctionsModule),
   ],
   controllers: [BidsController],
-  providers: [BidsService],
+  providers: [BidsService, JwtService],
   exports: [BidsService],
 })
 export class BidsModule {}
