@@ -3,7 +3,8 @@ import { CreateAuctionDto, AuctionFiltersDto } from './dto/auction.dto';
 import { BidsGateway } from '../websockets/bids.gateway';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BidsService } from '../bids/bids.service';
-import { Prisma, Auction, Bid } from '@prisma/client';
+import { Auction, Bid } from '@prisma/client';
+import { createId } from '@paralleldrive/cuid2';
 
 @Injectable()
 export class AuctionsService {
@@ -19,6 +20,7 @@ export class AuctionsService {
   ): Promise<Auction> {
     return this.prisma.auction.create({
       data: {
+        id: createId(),
         ...dto,
         currentPrice: dto.startingPrice,
         sellerId,
@@ -96,16 +98,13 @@ export class AuctionsService {
       throw new NotFoundException('Auction not found');
     }
 
-    // Update auction's end date
     await this.prisma.auction.update({
       where: { id },
       data: { endDate: new Date() },
     });
 
-    // Get the highest bid for the auction
     const winningBid = await this.bidsService.getHighestBidsForAuction(id);
 
-    // Notify via WebSocket
     await this.bidsGateway.notifyAuctionEnd(id, winningBid);
 
     return winningBid;
