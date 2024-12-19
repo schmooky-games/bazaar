@@ -1,0 +1,13 @@
+-- DropForeignKey
+ALTER TABLE "Bid" DROP CONSTRAINT "Bid_auctionId_fkey";
+
+-- AlterTable
+ALTER TABLE "Auction" ALTER COLUMN "id" SET DATA TYPE VARCHAR(128);
+
+-- AlterTable
+ALTER TABLE "Bid" 
+    ALTER COLUMN "id" SET DATA TYPE VARCHAR(128),
+    ALTER COLUMN "auctionId" SET DATA TYPE VARCHAR(128);
+
+-- AddForeignKey
+ALTER TABLE "Bid" ADD CONSTRAINT "Bid_auctionId_fkey" FOREIGN KEY ("auctionId") REFERENCES "Auction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

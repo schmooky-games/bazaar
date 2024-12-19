@@ -7,8 +7,12 @@ datasource db {
   url      = env("DB_URL")
 }
 
+enum GenerateId {
+  cuid2
+}
+
 model Auction {
-  id            String   @id @default(cuid()) @db.VarChar(32)
+  id            String   @id @default(dbgenerated("gen_cuid2()")) @db.VarChar(128)
   name          String
   description   String
   startingPrice Float
@@ -19,7 +23,7 @@ model Auction {
 }
 
 model Bid {
-  id         String   @id @default(cuid()) @db.VarChar(32)
+  id         String   @id @default(dbgenerated("gen_cuid2()")) @db.VarChar(128)
   amount     Float
   placedAt   DateTime
   auctionId  String
