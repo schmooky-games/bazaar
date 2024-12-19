@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PlaceBidDto } from './dto/bid.dto';
 import { BidsGateway } from '../websockets/bids.gateway';
 import { PaginationOptionsDto } from 'src/pagination/pagination.dto';
+import { createId } from '@paralleldrive/cuid2';
 
 @Injectable()
 export class BidsService {
@@ -38,7 +39,7 @@ export class BidsService {
 
     const bid = await this.prisma.bid.create({
       data: {
-        id: undefined,
+        id: createId(),
         amount: dto.amount,
         placedAt: new Date(),
         auctionId: dto.auctionId,

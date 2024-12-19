@@ -12,7 +12,7 @@ enum GenerateId {
 }
 
 model Auction {
-  id            String   @id @default(dbgenerated("gen_cuid2()")) @db.VarChar(128)
+  id            String   @id
   name          String
   description   String
   startingPrice Float
@@ -23,7 +23,7 @@ model Auction {
 }
 
 model Bid {
-  id         String   @id @default(dbgenerated("gen_cuid2()")) @db.VarChar(128)
+  id         String   @id
   amount     Float
   placedAt   DateTime
   auctionId  String
