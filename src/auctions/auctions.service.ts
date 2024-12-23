@@ -1,17 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAuctionDto, AuctionFiltersDto } from './dto/auction.dto';
-import { BidsGateway } from '../websockets/bids.gateway';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BidsService } from '../bids/bids.service';
 import { Auction, Bid } from '@prisma/client';
 import { createId } from '@paralleldrive/cuid2';
+import { ClientKafka } from '@nestjs/microservices';
+import { timestamp } from 'rxjs';
 
 @Injectable()
 export class AuctionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bidsService: BidsService,
-    private readonly bidsGateway: BidsGateway,
+    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
 
   async createAuction(
@@ -54,7 +55,6 @@ export class AuctionsService {
     const { page, limit } = options;
     const skip = (page - 1) * limit;
 
-    // Фильтрация
     const where: any = {};
     if (filters.minPrice) {
       where.currentPrice = { gte: filters.minPrice };
@@ -105,7 +105,11 @@ export class AuctionsService {
 
     const winningBid = await this.bidsService.getHighestBidsForAuction(id);
 
-    await this.bidsGateway.notifyAuctionEnd(id, winningBid);
+    await this.kafkaClient.emit('auction.end', {
+      auctionId: id,
+      endDate: new Date(),
+      winningBid: winningBid,
+    });
 
     return winningBid;
   }

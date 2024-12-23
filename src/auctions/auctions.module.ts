@@ -6,6 +6,8 @@ import { BidsModule } from '../bids/bids.module';
 import { RedisModule } from 'src/redis/redis.module';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaModule } from 'prisma/prisma.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -13,6 +15,24 @@ import { PrismaModule } from 'prisma/prisma.module';
     RedisModule,
     WebsocketsModule,
     forwardRef(() => BidsModule),
+    ClientsModule.registerAsync([
+      {
+        name: 'KAFKA_SERVICE',
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: configService.get('KAFKA_CLIENT_ID'),
+              brokers: [configService.get('KAFKA_BROKER_URL')],
+            },
+            consumer: {
+              groupId: configService.get('KAFKA_CONSUMER_GROUP'),
+            },
+          },
+        }),
+      },
+    ]),
   ],
   controllers: [AuctionsController],
   providers: [AuctionsService, JwtService],

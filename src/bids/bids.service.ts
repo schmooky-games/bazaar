@@ -2,18 +2,19 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PlaceBidDto } from './dto/bid.dto';
-import { BidsGateway } from '../websockets/bids.gateway';
 import { PaginationOptionsDto } from 'src/pagination/pagination.dto';
 import { createId } from '@paralleldrive/cuid2';
+import { ClientKafka } from '@nestjs/microservices';
 
 @Injectable()
 export class BidsService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly bidsGateway: BidsGateway,
+    private readonly prisma: PrismaService, 
+    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
 
   private async validateAuction(auctionId: string) {
@@ -24,6 +25,14 @@ export class BidsService {
       throw new NotFoundException('Auction not found');
     }
     return auction;
+  }
+
+  async onModuleInit() {
+    try {
+      await this.kafkaClient.connect();
+    } catch (error) {
+      console.error('Failed to connect to Kafka:', error);
+    }
   }
 
   async placeBid(dto: PlaceBidDto, userId: string) {
@@ -52,7 +61,11 @@ export class BidsService {
       data: { currentPrice: dto.amount },
     });
 
-    await this.bidsGateway.notifyPriceUpdate(dto.auctionId, dto.amount);
+    await this.kafkaClient.emit('auction.price.update', {
+      auctionId: dto.auctionId,
+      newPrice: dto.amount,
+      timestamp: new Date(),
+    });
 
     return bid;
   }
