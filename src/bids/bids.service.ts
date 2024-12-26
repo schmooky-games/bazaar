@@ -13,7 +13,7 @@ import { ClientKafka } from '@nestjs/microservices';
 @Injectable()
 export class BidsService {
   constructor(
-    private readonly prisma: PrismaService, 
+    private readonly prisma: PrismaService,
     @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
 
@@ -63,6 +63,7 @@ export class BidsService {
 
     await this.kafkaClient.emit('auction.price.update', {
       auctionId: dto.auctionId,
+      bidderId: userId,
       newPrice: dto.amount,
       timestamp: new Date(),
     });
